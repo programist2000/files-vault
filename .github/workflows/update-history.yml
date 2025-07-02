@@ -1,0 +1,32 @@
+name: Update history.json
+
+on:
+  push:
+    paths:
+      - 'files/**'
+      - 'generate-history.js'
+      - '.github/workflows/update-history.yml'
+
+jobs:
+  update-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Generate history.json
+        run: node generate-history.js
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update docs/history.json [auto]'
+          branch: ${{ github.ref_name }}
+          file_pattern: docs/history.json 
