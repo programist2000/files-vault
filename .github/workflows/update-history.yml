@@ -29,5 +29,4 @@ jobs:
         with:
           commit_message: 'chore: update docs/history.json [auto]'
           branch: ${{ github.ref_name }}
-          file_pattern: docs/history.json
-          github_token: ${{ secrets.GITHUB_TOKEN }} 
+          file_pattern: docs/history.json 
