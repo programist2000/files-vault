@@ -1,7 +1,7 @@
 {
   "test.json": [
     {
-      "hash": "bacc90b",
+      "hash": "2fed8f8",
       "author": "Alexander",
       "date": "2025-07-02",
       "message": "start"
@@ -9,13 +9,7 @@
   ],
   "test_empty.json": [
     {
-      "hash": "ce6d721",
-      "author": "Alexander",
-      "date": "2025-07-02",
-      "message": "start"
-    },
-    {
-      "hash": "bacc90b",
+      "hash": "2fed8f8",
       "author": "Alexander",
       "date": "2025-07-02",
       "message": "start"
