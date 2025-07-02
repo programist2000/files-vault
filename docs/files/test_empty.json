@@ -1,0 +1,188 @@
+{
+  "JSON_VERSION": 1,
+  "INVOCE": "string",
+  "ORDER_NUMBER": "string",
+  "UNSFM_FLAG": false,
+  "BONDEDWAREHOUSE": "string",
+  "TotalQuantity": 72,
+  "POSITIONS": [
+    {
+      "FullName": "string",
+      "GTIN": "string",
+      "AlcCode": "string",
+      "AlcVolume": "string",
+      "UnitQuantity": 36,
+      "MarksInfo": [
+        {
+          "ProductionDate": "string",
+          "ExpDate": "string",
+          "CodeInfo": {
+            "PALLET1": {
+              "BOX1": [
+                "mark1",
+                "mark2",
+                "mark3"
+              ],
+              "BOX2": [
+                "mark4",
+                "mark5",
+                "mark6"
+              ],
+              "BOX3": [
+                "mark7",
+                "mark8",
+                "mark9"
+              ]
+            },
+            "PALLET2": {
+              "BOX4": [
+                "mark10",
+                "mark11",
+                "mark12"
+              ],
+              "BOX5": [
+                "mark13",
+                "mark14",
+                "mark15"
+              ],
+              "BOX6": [
+                "mark16",
+                "mark17",
+                "mark18"
+              ]
+            }
+          }
+        },
+        {
+          "ProductionDate": "string",
+          "ExpDate": "string",
+          "CodeInfo": {
+            "PALLET1": {
+              "BOX1": [
+                "mark1",
+                "mark2",
+                "mark3"
+              ],
+              "BOX2": [
+                "mark4",
+                "mark5",
+                "mark6"
+              ],
+              "BOX3": [
+                "mark7",
+                "mark8",
+                "mark9"
+              ]
+            },
+            "PALLET2": {
+              "BOX4": [
+                "mark10",
+                "mark11",
+                "mark12"
+              ],
+              "BOX5": [
+                "mark13",
+                "mark14",
+                "mark15"
+              ],
+              "BOX6": [
+                "mark16",
+                "mark17",
+                "mark18"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "FullName": "string",
+      "GTIN": "string",
+      "AlcCode": "string",
+      "AlcVolume": "string",
+      "UnitQuantity": 72,
+      "MarksInfo": [
+        {
+          "ProductionDate": "string",
+          "ExpDate": "string",
+          "CodeInfo": {
+            "PALLET1": {
+              "BOX1": [
+                "mark1",
+                "mark2",
+                "mark3"
+              ],
+              "BOX2": [
+                "mark4",
+                "mark5",
+                "mark6"
+              ],
+              "BOX3": [
+                "mark7",
+                "mark8",
+                "mark9"
+              ]
+            },
+            "PALLET2": {
+              "BOX4": [
+                "mark10",
+                "mark11",
+                "mark12"
+              ],
+              "BOX5": [
+                "mark13",
+                "mark14",
+                "mark15"
+              ],
+              "BOX6": [
+                "mark16",
+                "mark17",
+                "mark18"
+              ]
+            }
+          }
+        },
+        {
+          "ProductionDate": "string",
+          "ExpDate": "string",
+          "CodeInfo": {
+            "PALLET1": {
+              "BOX1": [
+                "mark1",
+                "mark2",
+                "mark3"
+              ],
+              "BOX2": [
+                "mark4",
+                "mark5",
+                "mark6"
+              ],
+              "BOX3": [
+                "mark7",
+                "mark8",
+                "mark9"
+              ]
+            },
+            "PALLET2": {
+              "BOX4": [
+                "mark10",
+                "mark11",
+                "mark12"
+              ],
+              "BOX5": [
+                "mark13",
+                "mark14",
+                "mark15"
+              ],
+              "BOX6": [
+                "mark16",
+                "mark17",
+                "mark18"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

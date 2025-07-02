@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Files Vault</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+            background: #f9f9f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #file-list {
+            margin-bottom: 2em;
+        }
+
+        .file-item {
+            cursor: pointer;
+            color: #0074d9;
+            margin: 0.5em 0;
+        }
+
+        .file-item:hover {
+            text-decoration: underline;
+        }
+
+        #file-content {
+            white-space: pre-wrap;
+            background: #fff;
+            padding: 1em;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        #history {
+            margin-top: 2em;
+        }
+
+        .history-entry {
+            font-size: 0.95em;
+            color: #555;
+            margin-bottom: 0.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Files Vault</h1>
+    <div id="file-list"></div>
+    <div id="file-content"></div>
+    <div id="history"></div>
+    <script src="main.js"></script>
+</body>
+
+</html>
