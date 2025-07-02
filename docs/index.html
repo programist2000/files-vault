@@ -5,26 +5,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Files Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 2em;
-            background: #f9f9f9;
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            background: #f4f6fa;
+            color: #222;
         }
 
-        h1 {
-            color: #333;
+        header {
+            background: #fff;
+            box-shadow: 0 2px 8px #0001;
+            padding: 1.5em 2em 1em 2em;
+            margin-bottom: 2em;
+            display: flex;
+            align-items: center;
+            gap: 1em;
+        }
+
+        header h1 {
+            font-size: 2em;
+            font-weight: 600;
+            margin: 0;
+            color: #2c3e50;
+            letter-spacing: 1px;
         }
 
         #main-layout {
             display: flex;
             gap: 2em;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2em 2em 2em;
         }
 
-        #left-panel,
-        #right-panel {
-            flex: 1;
-            min-width: 0;
+        #left-panel {
+            width: 260px;
+            min-width: 200px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 1.5em 1em;
+            height: fit-content;
         }
 
         #file-list {
@@ -33,36 +56,138 @@
 
         .file-item {
             cursor: pointer;
-            color: #0074d9;
-            margin: 0.5em 0;
+            color: #2c3e50;
+            padding: 0.5em 1em;
+            border-radius: 6px;
+            margin-bottom: 0.3em;
+            transition: background 0.15s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
         }
 
         .file-item.selected {
-            font-weight: bold;
+            background: #eaf6ff;
+            color: #0074d9;
+            font-weight: 600;
         }
 
         .file-item:hover {
-            text-decoration: underline;
+            background: #f0f4fa;
         }
 
-        #file-content,
-        #history-content {
-            white-space: pre-wrap;
+        .file-meta {
+            color: #888;
+            font-size: 0.97em;
+            margin-bottom: 0.5em;
+        }
+
+        #center-panel {
+            flex: 1.5;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5em;
+        }
+
+        .version-block {
             background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 1.5em 1em 1em 1em;
+            margin-bottom: 0.5em;
+            min-height: 180px;
+            position: relative;
+        }
+
+        .version-block h3 {
+            margin: 0 0 0.5em 0;
+            font-size: 1.1em;
+            color: #0074d9;
+            font-weight: 600;
+        }
+
+        .version-block .file-meta {
+            margin-bottom: 0.7em;
+        }
+
+        .version-block pre {
+            background: #f8fafc;
+            border-radius: 6px;
             padding: 1em;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            margin-bottom: 1em;
+            font-size: 1em;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        #diff-block {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 1.5em 1em 1em 1em;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        #diff-block h3 {
+            margin: 0 0 1em 0;
+            color: #e67e22;
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .diff-line {
+            display: block;
+            white-space: pre;
+            font-family: 'Fira Mono', 'Consolas', monospace;
+            font-size: 0.98em;
+            padding: 0.1em 0.5em;
+            border-radius: 4px;
+            margin-bottom: 1px;
+        }
+
+        .diff-add {
+            background: #eaffea;
+            color: #228b22;
+        }
+
+        .diff-remove {
+            background: #ffecec;
+            color: #c0392b;
+        }
+
+        .diff-same {
+            background: #f8fafc;
+            color: #222;
+        }
+
+        #right-panel {
+            width: 340px;
+            min-width: 220px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 1.5em 1em;
+            height: fit-content;
         }
 
         #history {
-            margin-top: 2em;
+            margin-top: 1em;
         }
 
         .history-entry {
-            font-size: 0.95em;
+            font-size: 0.98em;
             color: #555;
-            margin-bottom: 0.5em;
+            margin-bottom: 0.7em;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 0.7em 0.7em 0.7em 1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            justify-content: space-between;
         }
 
         .history-btn {
@@ -70,43 +195,75 @@
             color: #0074d9;
             background: none;
             border: none;
-            padding: 0;
-            margin-left: 0.5em;
-            text-decoration: underline;
+            padding: 0.2em 0.7em;
+            border-radius: 5px;
+            font-size: 0.97em;
+            font-weight: 500;
+            transition: background 0.15s;
         }
 
-        .history-btn.selected {
-            font-weight: bold;
-            color: #2c3e50;
+        .history-btn.selected,
+        .history-btn:hover {
+            background: #eaf6ff;
+            color: #0074d9;
         }
 
-        .file-meta {
-            color: #888;
-            font-size: 0.95em;
-            margin-bottom: 0.5em;
-        }
-
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
             #main-layout {
                 flex-direction: column;
+                gap: 1em;
+            }
+
+            #left-panel,
+            #right-panel,
+            #center-panel {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 700px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1em;
+            }
+
+            #main-layout {
+                padding: 0 0.5em;
+            }
+
+            .version-block,
+            #diff-block,
+            #left-panel,
+            #right-panel {
+                padding: 1em 0.5em;
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
 </head>
 
 <body>
-    <h1>Files Vault</h1>
+    <header>
+        <h1>Files Vault</h1>
+        <span style="color:#888;font-size:1.1em;">— Просмотр и сравнение версий файлов</span>
+    </header>
     <div id="main-layout">
         <div id="left-panel">
             <div id="file-list"></div>
+        </div>
+        <div id="center-panel">
             <div id="file-content"></div>
+            <div id="history-content"></div>
+            <div id="diff-block"></div>
+            <div id="compare-panel" style="margin-bottom:1.5em;"></div>
         </div>
         <div id="right-panel">
-            <div id="history-content"></div>
+            <div style="font-weight:600;font-size:1.1em;margin-bottom:0.7em;">История изменений</div>
             <div id="history"></div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
     <script src="main.js"></script>
 </body>
 
