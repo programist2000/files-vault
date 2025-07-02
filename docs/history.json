@@ -1,18 +1,18 @@
 {
   "test.json": [
     {
-      "hash": "2fed8f8",
-      "author": "Alexander",
+      "hash": "4d755f0",
+      "author": "klepkin-pv",
       "date": "2025-07-02",
-      "message": "start"
+      "message": "fix: change tabs to spaces"
     }
   ],
   "test_empty.json": [
     {
-      "hash": "2fed8f8",
-      "author": "Alexander",
+      "hash": "4d755f0",
+      "author": "klepkin-pv",
       "date": "2025-07-02",
-      "message": "start"
+      "message": "fix: change tabs to spaces"
     }
   ]
 }
