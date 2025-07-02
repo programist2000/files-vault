@@ -7,7 +7,7 @@
   "TotalQuantity": 72,
   "POSITIONS": [
     {
-      "FullName": "string",
+      "FullName ": "string",
       "GTIN": "string",
       "AlcCode": "string",
       "AlcVolume": "string",
