@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -29,4 +29,5 @@ jobs:
         with:
           commit_message: 'chore: update docs/history.json [auto]'
           branch: ${{ github.ref_name }}
-          file_pattern: docs/history.json 
+          file_pattern: docs/history.json
+          github_token: ${{ secrets.GITHUB_TOKEN }} 
