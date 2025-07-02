@@ -16,6 +16,17 @@
             color: #333;
         }
 
+        #main-layout {
+            display: flex;
+            gap: 2em;
+        }
+
+        #left-panel,
+        #right-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
         #file-list {
             margin-bottom: 2em;
         }
@@ -26,16 +37,22 @@
             margin: 0.5em 0;
         }
 
+        .file-item.selected {
+            font-weight: bold;
+        }
+
         .file-item:hover {
             text-decoration: underline;
         }
 
-        #file-content {
+        #file-content,
+        #history-content {
             white-space: pre-wrap;
             background: #fff;
             padding: 1em;
             border-radius: 5px;
             border: 1px solid #ddd;
+            margin-bottom: 1em;
         }
 
         #history {
@@ -47,14 +64,49 @@
             color: #555;
             margin-bottom: 0.5em;
         }
+
+        .history-btn {
+            cursor: pointer;
+            color: #0074d9;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-left: 0.5em;
+            text-decoration: underline;
+        }
+
+        .history-btn.selected {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .file-meta {
+            color: #888;
+            font-size: 0.95em;
+            margin-bottom: 0.5em;
+        }
+
+        @media (max-width: 900px) {
+            #main-layout {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 
 <body>
     <h1>Files Vault</h1>
-    <div id="file-list"></div>
-    <div id="file-content"></div>
-    <div id="history"></div>
+    <div id="main-layout">
+        <div id="left-panel">
+            <div id="file-list"></div>
+            <div id="file-content"></div>
+        </div>
+        <div id="right-panel">
+            <div id="history-content"></div>
+            <div id="history"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
     <script src="main.js"></script>
 </body>
 
