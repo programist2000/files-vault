@@ -1,12 +1,20 @@
-// Список файлов (заполним вручную, автоматизация позже)
+// Получаем список файлов из папки files (захардкожено, но можно заменить на динамическое получение)
 const files = [
     'test.json',
     'test_empty.json'
 ];
 
-const fileListDiv = document.getElementById('file-list');
+// Для примера: структура файлов с подпапками
+const fileTree = [
+    { name: 'test.json', path: 'test.json', type: 'file' },
+    { name: 'test_empty.json', path: 'test_empty.json', type: 'file' }
+    // Для подпапок: { name: 'subfolder', type: 'dir', children: [ ... ] }
+];
+
+const leftContentDiv = document.getElementById('left-content');
+const rightContentDiv = document.getElementById('right-content');
 const historyDiv = document.getElementById('history');
-const compareColumns = document.getElementById('compare-columns');
+const mainLayout = document.getElementById('main-layout');
 
 const comparePanel = document.getElementById('compare-panel');
 let compareSelection = [null, null]; // [idx1, idx2]
@@ -14,6 +22,8 @@ let compareSelection = [null, null]; // [idx1, idx2]
 let historyData = null;
 let selectedFile = null;
 let selectedCommit = null;
+
+const fileDropdownDiv = document.getElementById('file-dropdown');
 
 async function loadHistory() {
     if (historyData) return historyData;
@@ -40,8 +50,15 @@ function getLastModified(history) {
     return history[0];
 }
 
-function showFileList(selected) {
-    fileListDiv.innerHTML = files.map(f => `<div class="file-item${selected === f ? ' selected' : ''}" onclick="showFile('${f}')"><span>📄</span>${f}</div>`).join('');
+function renderFileMenuTree(tree, selected, prefix = '') {
+    return tree.map(item => {
+        if (item.type === 'file') {
+            return `<div class="file-item${selected === item.path ? ' selected' : ''}" onclick="selectFile('${item.path}')">${item.name}</div>`;
+        } else if (item.type === 'dir') {
+            return `<div class="file-item" style="font-weight:600;">${item.name}<div class='submenu'>${renderFileMenuTree(item.children, selected, prefix + item.name + '/')}</div></div>`;
+        }
+        return '';
+    }).join('');
 }
 
 function getDownloadLink(filename, commit) {
@@ -73,45 +90,57 @@ function renderComparePanel(filename, history, actualText) {
   `;
 }
 
-async function showFile(filename) {
-    selectedFile = filename;
-    selectedCommit = null;
-    showFileList(filename);
+window.selectFile = async function (filename) {
+    fileDropdownDiv.innerHTML = renderFileMenuTree(fileTree, filename);
+    mainLayout.style.display = '';
+    leftContentDiv.innerHTML = 'Загрузка...';
+    rightContentDiv.innerHTML = '';
     historyDiv.innerHTML = '';
-    comparePanel.innerHTML = '';
-    compareColumns.innerHTML = '';
     try {
         const res = await fetch(`files/${filename}`);
         if (!res.ok) throw new Error('Ошибка загрузки файла');
         const text = await res.text();
-        // История
+        leftContentDiv.innerHTML = `<div class='version-block'><div class='file-meta'>Актуальная версия</div><pre>${text.replace(/</g, '&lt;')}</pre></div>`;
+        // Показываем историю справа
         const history = await loadHistory();
         const fileHistory = history[filename] || [];
-        // История справа
         if (fileHistory.length) {
             historyDiv.innerHTML = fileHistory.map((entry, idx) =>
                 `<div class="history-entry">` +
                 `<span><b>${formatDateTime(entry.date)}</b> <span style='color:#888'>[${entry.author}]</span><br>${entry.message}</span>` +
-                `<button class='history-btn' onclick='showHistoryVersion("${filename}", "${entry.hash}", ${idx})'>Показать версию</button>` +
-                renderDownloadButton(filename, entry.hash) +
+                `<button class='history-btn' onclick='selectHistoryVersion(\'${filename}\', ${idx})'>Показать версию</button>` +
                 `</div>`
             ).join('');
-        } else {
-            historyDiv.innerHTML = '<div class="history-entry">Нет изменений</div>';
         }
-        comparePanel.innerHTML = renderComparePanel(filename, fileHistory, text);
-        compareColumns.innerHTML = '';
-        setTimeout(() => {
-            const btn = document.getElementById('cmpBtn');
-            if (btn) btn.onclick = () => compareAnyVersionsSideBySide(filename, fileHistory, text);
-        }, 0);
+        // Синхронизируем высоту блоков
+        setTimeout(syncColHeights, 0);
     } catch (e) {
-        // fileContentDiv.innerHTML = 'Ошибка: ' + e.message;
+        leftContentDiv.innerHTML = 'Ошибка: ' + e.message;
     }
 }
 
-function renderSideBySide(leftText, rightText) {
-    // Diff-подсветка только в правой колонке
+window.selectHistoryVersion = async function (filename, idx) {
+    rightContentDiv.innerHTML = 'Загрузка...';
+    const history = await loadHistory();
+    const fileHistory = history[filename] || [];
+    const entry = fileHistory[idx];
+    const url = getDownloadLink(filename, entry.hash);
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Ошибка загрузки версии файла');
+        const text = await res.text();
+        // Получаем актуальную версию для diff
+        const actualRes = await fetch(`files/${filename}`);
+        const actualText = await actualRes.text();
+        rightContentDiv.innerHTML = `<div class='version-block'><div class='file-meta'>Версия на <b>${formatDateTime(entry.date)}</b> (${entry.author})</div><pre>${renderSideBySide(actualText, text, false)}</pre></div>`;
+        setTimeout(syncColHeights, 0);
+    } catch (e) {
+        rightContentDiv.innerHTML = 'Ошибка: ' + e.message;
+    }
+}
+
+function renderSideBySide(leftText, rightText, showAll = true) {
+    // Diff-подсветка только в rightText (выбранная версия)
     const leftLines = leftText.split('\n');
     const rightLines = rightText.split('\n');
     const maxLen = Math.max(leftLines.length, rightLines.length);
@@ -125,56 +154,27 @@ function renderSideBySide(leftText, rightText) {
             else if (l && !r) cls = 'diff-remove';
             else cls = 'diff-change';
         }
-        result += `<div class='diff-line ${cls}'>${r.replace(/</g, '&lt;')}</div>`;
+        if (showAll || cls !== 'diff-same')
+            result += `<div class='diff-line ${cls}'>${r.replace(/</g, '&lt;')}</div>`;
     }
     return result;
 }
 
-async function compareAnyVersionsSideBySide(filename, fileHistory, actualText) {
-    const idx1 = parseInt(document.getElementById('cmp1').value);
-    const idx2 = parseInt(document.getElementById('cmp2').value);
-    let text1 = '';
-    let text2 = '';
-    let label1 = '';
-    let label2 = '';
-    let commit1 = null;
-    let commit2 = null;
-    if (idx1 === -1) {
-        text1 = actualText;
-        label1 = 'Актуальная версия';
-    } else {
-        commit1 = fileHistory[idx1].hash;
-        const url1 = getDownloadLink(filename, commit1);
-        text1 = await (await fetch(url1)).text();
-        label1 = `${formatDateTime(fileHistory[idx1].date)} (${fileHistory[idx1].author})`;
-    }
-    if (idx2 === -1) {
-        text2 = actualText;
-        label2 = 'Актуальная версия';
-    } else {
-        commit2 = fileHistory[idx2].hash;
-        const url2 = getDownloadLink(filename, commit2);
-        text2 = await (await fetch(url2)).text();
-        label2 = `${formatDateTime(fileHistory[idx2].date)} (${fileHistory[idx2].author})`;
-    }
-    compareColumns.innerHTML = `
-    <div style='flex:1;min-width:0;'>
-      <div class='version-block'><div class='file-meta'><b>Слева:</b> ${label1} ${renderDownloadButton(filename, commit1)}</div><h3>Версия 1</h3><pre>${text1.replace(/</g, '&lt;')}</pre></div>
-    </div>
-    <div style='flex:1;min-width:0;'>
-      <div class='version-block'><div class='file-meta'><b>Справа:</b> ${label2} ${renderDownloadButton(filename, commit2)}</div><h3>Версия 2 (с подсветкой diff)</h3><pre>${renderSideBySide(text1, text2)}</pre></div>
-    </div>
-  `;
+function syncColHeights() {
+    const l = leftContentDiv.querySelector('.version-block');
+    const r = rightContentDiv.querySelector('.version-block');
+    const h = Math.max(l ? l.offsetHeight : 0, r ? r.offsetHeight : 0, 500);
+    if (l) l.style.minHeight = h + 'px';
+    if (r) r.style.minHeight = h + 'px';
+    document.getElementById('history-col').style.minHeight = h + 'px';
 }
 
-async function showHistoryVersion(filename, commit, idx) {
-    selectedCommit = commit;
-    // const owner = 'programist2000';
-    // const repo = 'files-vault';
-    // const url = `https://raw.githubusercontent.com/${owner}/${repo}/${commit}/files/${filename}`;
-    // historyContentDiv.innerHTML = '<div class="version-block">Загрузка версии...</div>';
-    // ... остальной код не нужен, так как теперь только сравнение через compare-panel ...
+function renderFileMenu() {
+    fileDropdownDiv.innerHTML = renderFileMenuTree(fileTree, null);
 }
+
+// Инициализация
+renderFileMenu();
 
 // Инициализация
 window.showFile = showFile;
