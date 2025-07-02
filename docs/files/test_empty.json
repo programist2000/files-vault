@@ -12,7 +12,7 @@
       "AlcCode": "string",
       "AlcVolume": "string",
       "UnitQuantity": 36,
-      "MarksInfo ": [
+      "MarksInfo": [
         {
           "ProductionDate": "string",
           "ExpDate": "string",
