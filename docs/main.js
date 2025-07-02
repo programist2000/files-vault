@@ -8,15 +8,7 @@ const fileListDiv = document.getElementById('file-list');
 const fileContentDiv = document.getElementById('file-content');
 const historyDiv = document.getElementById('history');
 const historyContentDiv = document.getElementById('history-content');
-const diffDiv = document.createElement('div');
-diffDiv.id = 'diff-block';
-diffDiv.style.marginTop = '2em';
-diffDiv.style.background = '#f6f8fa';
-diffDiv.style.padding = '1em';
-diffDiv.style.borderRadius = '5px';
-diffDiv.style.border = '1px solid #ddd';
-diffDiv.style.fontFamily = 'monospace';
-diffDiv.style.fontSize = '0.97em';
+const compareColumns = document.getElementById('compare-columns');
 
 const comparePanel = document.getElementById('compare-panel');
 let compareSelection = [null, null]; // [idx1, idx2]
@@ -78,7 +70,7 @@ function renderComparePanel(filename, history, actualText) {
       <select id="cmp1">${options}</select>
       <span style="font-size:1.2em;">⇄</span>
       <select id="cmp2">${options}</select>
-      <button id="cmpBtn" class="history-btn" style="font-weight:600;">Показать diff</button>
+      <button id="cmpBtn" class="history-btn" style="font-weight:600;">Показать сравнение</button>
     </div>
   `;
 }
@@ -90,8 +82,8 @@ async function showFile(filename) {
     fileContentDiv.innerHTML = '';
     historyDiv.innerHTML = '';
     historyContentDiv.innerHTML = '';
-    diffDiv.innerHTML = '';
     comparePanel.innerHTML = '';
+    compareColumns.innerHTML = '';
     try {
         const res = await fetch(`files/${filename}`);
         if (!res.ok) throw new Error('Ошибка загрузки файла');
@@ -119,26 +111,72 @@ async function showFile(filename) {
             historyDiv.innerHTML = '<div class="history-entry">Нет изменений</div>';
         }
         historyContentDiv.innerHTML = '';
-        diffDiv.innerHTML = '';
         comparePanel.innerHTML = renderComparePanel(filename, fileHistory, text);
-        // Навешиваем обработчик на кнопку сравнения
+        compareColumns.innerHTML = '';
         setTimeout(() => {
             const btn = document.getElementById('cmpBtn');
-            if (btn) btn.onclick = () => compareAnyVersions(filename, fileHistory, text);
+            if (btn) btn.onclick = () => compareAnyVersionsSideBySide(filename, fileHistory, text);
         }, 0);
     } catch (e) {
         fileContentDiv.innerHTML = 'Ошибка: ' + e.message;
     }
 }
 
-function renderDiff(actual, historical) {
-    if (!window.Diff) return '';
-    const diff = Diff.diffLines(historical, actual);
-    return diff.map(part => {
-        let cls = part.added ? 'diff-add' : part.removed ? 'diff-remove' : 'diff-same';
-        let sign = part.added ? '+' : part.removed ? '-' : ' ';
-        return `<span class='diff-line ${cls}'>${sign}${part.value.replace(/</g, '&lt;')}</span>`;
-    }).join('');
+function renderSideBySide(leftText, rightText) {
+    // Diff-подсветка только в правой колонке
+    const leftLines = leftText.split('\n');
+    const rightLines = rightText.split('\n');
+    const maxLen = Math.max(leftLines.length, rightLines.length);
+    let result = '';
+    for (let i = 0; i < maxLen; i++) {
+        const l = leftLines[i] ?? '';
+        const r = rightLines[i] ?? '';
+        let cls = 'diff-same';
+        if (l !== r) {
+            if (!l && r) cls = 'diff-add';
+            else if (l && !r) cls = 'diff-remove';
+            else cls = 'diff-change';
+        }
+        result += `<div class='diff-line ${cls}'>${r.replace(/</g, '&lt;')}</div>`;
+    }
+    return result;
+}
+
+async function compareAnyVersionsSideBySide(filename, fileHistory, actualText) {
+    const idx1 = parseInt(document.getElementById('cmp1').value);
+    const idx2 = parseInt(document.getElementById('cmp2').value);
+    let text1 = '';
+    let text2 = '';
+    let label1 = '';
+    let label2 = '';
+    let commit1 = null;
+    let commit2 = null;
+    if (idx1 === -1) {
+        text1 = actualText;
+        label1 = 'Актуальная версия';
+    } else {
+        commit1 = fileHistory[idx1].hash;
+        const url1 = getDownloadLink(filename, commit1);
+        text1 = await (await fetch(url1)).text();
+        label1 = `${formatDateTime(fileHistory[idx1].date)} (${fileHistory[idx1].author})`;
+    }
+    if (idx2 === -1) {
+        text2 = actualText;
+        label2 = 'Актуальная версия';
+    } else {
+        commit2 = fileHistory[idx2].hash;
+        const url2 = getDownloadLink(filename, commit2);
+        text2 = await (await fetch(url2)).text();
+        label2 = `${formatDateTime(fileHistory[idx2].date)} (${fileHistory[idx2].author})`;
+    }
+    compareColumns.innerHTML = `
+    <div style='flex:1;min-width:0;'>
+      <div class='version-block'><div class='file-meta'><b>Слева:</b> ${label1} ${renderDownloadButton(filename, commit1)}</div><h3>Версия 1</h3><pre>${text1.replace(/</g, '&lt;')}</pre></div>
+    </div>
+    <div style='flex:1;min-width:0;'>
+      <div class='version-block'><div class='file-meta'><b>Справа:</b> ${label2} ${renderDownloadButton(filename, commit2)}</div><h3>Версия 2 (с подсветкой diff)</h3><pre>${renderSideBySide(text1, text2)}</pre></div>
+    </div>
+  `;
 }
 
 async function showHistoryVersion(filename, commit, idx) {
@@ -147,7 +185,6 @@ async function showHistoryVersion(filename, commit, idx) {
     const repo = 'files-vault';
     const url = `https://raw.githubusercontent.com/${owner}/${repo}/${commit}/files/${filename}`;
     historyContentDiv.innerHTML = '<div class="version-block">Загрузка версии...</div>';
-    diffDiv.innerHTML = '';
     try {
         const res = await fetch(url);
         if (!res.ok) throw new Error('Ошибка загрузки версии файла');
@@ -164,38 +201,11 @@ async function showHistoryVersion(filename, commit, idx) {
         const actualRes = await fetch(`files/${filename}`);
         const actualText = await actualRes.text();
         // Показываем diff
-        diffDiv.innerHTML = `<h3>Сравнение версий (Diff)</h3>` + renderDiff(actualText, historicalText);
+        compareColumns.innerHTML = `<h3>Сравнение версий (Diff)</h3>` + renderSideBySide(actualText, historicalText);
     } catch (e) {
         historyContentDiv.innerHTML = '<div class="version-block">Ошибка: ' + e.message + '</div>';
-        diffDiv.innerHTML = '';
+        compareColumns.innerHTML = '';
     }
-}
-
-async function compareAnyVersions(filename, fileHistory, actualText) {
-    const idx1 = parseInt(document.getElementById('cmp1').value);
-    const idx2 = parseInt(document.getElementById('cmp2').value);
-    let text1 = '';
-    let text2 = '';
-    let label1 = '';
-    let label2 = '';
-    // -1 = актуальная версия
-    if (idx1 === -1) {
-        text1 = actualText;
-        label1 = 'Актуальная версия';
-    } else {
-        const url1 = getDownloadLink(filename, fileHistory[idx1].hash);
-        text1 = await (await fetch(url1)).text();
-        label1 = `${formatDateTime(fileHistory[idx1].date)} (${fileHistory[idx1].author})`;
-    }
-    if (idx2 === -1) {
-        text2 = actualText;
-        label2 = 'Актуальная версия';
-    } else {
-        const url2 = getDownloadLink(filename, fileHistory[idx2].hash);
-        text2 = await (await fetch(url2)).text();
-        label2 = `${formatDateTime(fileHistory[idx2].date)} (${fileHistory[idx2].author})`;
-    }
-    diffDiv.innerHTML = `<h3>Сравнение версий (Diff)</h3><div style='margin-bottom:0.7em;'><b>Слева:</b> ${label1}<br><b>Справа:</b> ${label2}</div>` + renderDiff(text2, text1);
 }
 
 // Инициализация
